@@ -10,6 +10,14 @@ output "lb-arn" {
   value = aws_lb.main-alb.arn
 }
 
-output "target-group-arn" {
-  value = aws_lb_target_group.alb-target-group.arn
+output "listener_arn" {
+  value = var.lb-listen-port == 443 ? aws_lb_listener.alb-listener["https"].arn :aws_lb_listener.alb-listener["http"].arn
+}
+
+output "blue_target_group_arn" {
+  value = aws_lb_target_group.blue-target-group.arn
+}
+
+output "green_target_group_arn" {
+  value = aws_lb_target_group.green-target-group.arn
 }

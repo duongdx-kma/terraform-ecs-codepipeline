@@ -11,7 +11,6 @@ resource "aws_ecs_cluster_capacity_providers" "example" {
 
 # ECS - Service
 resource "aws_ecs_service" "express-service" {
-  count            = var.express-service-count
   name             = "express-${var.env}"
   desired_count    = 1
   launch_type      = "FARGATE"
@@ -30,7 +29,7 @@ resource "aws_ecs_service" "express-service" {
   }
 
   load_balancer {
-    target_group_arn = var.target-group-arn
+#    target_group_arn = var.target-group-arn
     container_name   = "express-app"
     container_port   = 8088
   }

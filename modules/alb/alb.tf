@@ -1,3 +1,20 @@
+locals {
+  my_listeners = {
+    "https" = {
+      load_balancer_arn = aws_lb.main-alb.arn
+      port              = var.lb-listen-port
+      protocol          = var.lb-listen-protocol
+      certificate_arn   = var.certificate_arn
+    } ,
+    "http" = {
+      load_balancer_arn = aws_lb.main-alb.arn
+      port              = var.lb-listen-port
+      protocol          = var.lb-listen-protocol
+      certificate_arn   = null
+    }
+  }
+}
+
 # define application load balancer
 resource "aws_lb" "main-alb" {
   name               = "main-alb"
@@ -12,8 +29,26 @@ resource "aws_lb" "main-alb" {
 
 # Termination SSL/TLS
 # define application load balancer - target-group
-resource "aws_lb_target_group" "alb-target-group" {
-  name        = "alb-target-group"
+# v1 - blue
+resource "aws_lb_target_group" "blue-target-group" {
+  name        = "blue-target-group"
+  port        = 80
+  protocol    = "HTTP"
+  vpc_id      = var.vpc_id
+  target_type = "ip"
+
+  health_check {
+    path                = var.health_check
+    matcher             = var.health_check_matcher
+    interval            = var.health_check_interval
+    timeout             = var.health_check_timeout
+    healthy_threshold   = var.health-check-count
+    unhealthy_threshold = var.health-check-count
+  }
+}
+# v2 - green
+resource "aws_lb_target_group" "green-target-group" {
+  name        = "green-target-group"
   port        = 80
   protocol    = "HTTP"
   vpc_id      = var.vpc_id
@@ -30,28 +65,16 @@ resource "aws_lb_target_group" "alb-target-group" {
 }
 
 # define application load balancer - listener
-resource "aws_lb_listener" "alb-listener-https" {
-  count             = var.lb-listen-port == 443 ? 1 : 0
-  load_balancer_arn = aws_lb.main-alb.arn
-  port              = var.lb-listen-port
-  protocol          = var.lb-listen-protocol
-  certificate_arn = var.certificate_arn
+resource "aws_lb_listener" "alb-listener" {
+  for_each = local.my_listeners
+  port              = each.value.port
+  protocol          = each.value.protocol
+  load_balancer_arn = each.value.load_balancer_arn
+  certificate_arn   = each.value.certificate_arn
 
   default_action {
     type             = "forward"
-    target_group_arn = aws_lb_target_group.alb-target-group.arn
-  }
-}
-
-resource "aws_lb_listener" "alb-listener-http" {
-  count             = var.lb-listen-port == 80 ? 1 : 0
-  load_balancer_arn = aws_lb.main-alb.arn
-  port              = var.lb-listen-port
-  protocol          = var.lb-listen-protocol
-
-  default_action {
-    type             = "forward"
-    target_group_arn = aws_lb_target_group.alb-target-group.arn
+    target_group_arn = aws_lb_target_group.green-target-group.arn # default v1
   }
 }
 

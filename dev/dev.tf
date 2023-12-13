@@ -52,7 +52,7 @@ module "security-groups" {
 }
 
 module "roles" {
-  source     = "../modules/roles"
+  source     = "../modules/iam-roles"
   env        = var.env
   tags       = var.tags
   aws_region = var.aws_region
@@ -71,35 +71,10 @@ module "alb" {
 }
 
 module "policies" {
-  source                     = "../modules/policies"
+  source                     = "../modules/iam-policies"
   alb-arn                    = module.alb.lb-arn
   task-role-name             = module.roles.ecs-task-role.name
   task-execution-role-name   = module.roles.ecs-task-execution-role.name
-}
-
-module "jenkins-instance" {
-  source                    = "../modules/jenkins-instance"
-  user-data                 = data.cloudinit_config.cloudinit-jenkins.rendered
-  public-key                = file(var.path-to-public-key)
-  ubuntu-ami                = var.ubuntu-ami[var.aws_region]
-  instance-device-name      = var.instance-device-name
-  instance-type             = var.instance-type
-  jenkins-ingress = [{
-    from_port: 22
-    to_port: 22
-    protocol: "TCP"
-    cidr_blocks: ["0.0.0.0/0"]
-  }, {
-    from_port: 80
-    to_port: 80
-    protocol: "TCP"
-    cidr_blocks: ["0.0.0.0/0"]
-  }, {
-    from_port: 8080
-    to_port: 8080
-    protocol: "TCP"
-    cidr_blocks: ["0.0.0.0/0"]
-  }]
 }
 
 module "ecs" {
@@ -110,18 +85,55 @@ module "ecs" {
   task-role-arn           = module.roles.ecs-task-role.arn
   private-sg-ids          = [module.security-groups.instance-sg-id]
   repository-url          = "${module.ecr.ecr-output}:${var.commit-id}"
-  target-group-arn        = module.alb.target-group-arn
+  target-group-arn        = module.alb.blue_target_group_arn
   private-subnet-ids      = slice(module.vpc.private_subnets, 0, 2) // private-subnet-a, private-subnet-b
   express-service-count   = var.express-service-count
   task-execution-role-arn = module.roles.ecs-task-execution-role.arn
 }
 
-##module "auto-scaling" {
-##  source      = "../modules/auto-scaling"
-##  ecs_cluster = module.ecs.ecs_cluster
-##  ecs_service = module.ecs.ecs_service
-##}
-#
+module "auto-scaling" {
+  source      = "../modules/auto-scaling"
+  ecs_cluster_name = module.ecs.ecs_cluster.name
+  ecs_service_name = module.ecs.ecs_service.name
+}
+
+module "code_commit" {
+  source = "../modules/code-commit"
+}
+
+module "codebuild" {
+  source = "../modules/code-build"
+  tags = var.tags
+  aws_region = var.aws_region
+  env = var.env
+  ecr_repository_name = module.ecr.ecr_name
+}
+
+module "codedeploy" {
+  source = "../modules/code-deploy"
+  tags = var.tags
+  env = var.env
+  ecs_cluster_name = module.ecs.ecs_cluster.name
+  ecs_service_name = module.ecs.ecs_service.name
+  listener_arn = module.alb.listener_arn
+  blue_target_group_arn = module.alb.blue_target_group_arn
+  green_target_group_arn = module.alb.green_target_group_arn
+}
+
+module "codepipeline" {
+  source = "../modules/code-pipeline"
+  tags = var.tags
+  env = var.env
+  codedeploy_app_name = module.codedeploy.codedeploy_app_name
+  codedeploy_deployment_group_name = module.codedeploy.codedeploy_deployment_group_name
+  codebuild_project_name = module.codebuild.codebuild_project_name
+  codebuild_project_arn = module.codebuild.codebuild_project_arn
+  codecommit_repo_name = module.code_commit.codecommit_repo_name
+  codecommit_repo_arn = module.code_commit.codecommit_repo_arn
+  branch_name = "master"
+  application_name = "terraform-ecs"
+}
+
 module "route53" {
   source         = "../modules/route53"
   elb-dns-name   = module.alb.lb-dns

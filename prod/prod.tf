@@ -52,7 +52,7 @@ module "security-groups" {
 }
 
 module "roles" {
-  source     = "../modules/roles"
+  source     = "../modules/iam-roles"
   env        = var.env
   tags       = var.tags
   aws_region = var.aws_region
@@ -72,35 +72,10 @@ module "alb" {
 }
 
 module "policies" {
-  source                     = "../modules/policies"
+  source                     = "../modules/iam-policies"
   alb-arn                    = module.alb.lb-arn
   task-role-name             = module.roles.ecs-task-role.name
   task-execution-role-name   = module.roles.ecs-task-execution-role.name
-}
-
-module "jenkins-instance" {
-  source                    = "../modules/jenkins-instance"
-  user-data                 = data.cloudinit_config.cloudinit-jenkins.rendered
-  public-key                = file(var.path-to-public-key)
-  ubuntu-ami                = var.ubuntu-ami[var.aws_region]
-  instance-device-name      = var.instance-device-name
-  instance-type             = var.instance-type
-  jenkins-ingress = [{
-    from_port: 22
-    to_port: 22
-    protocol: "TCP"
-    cidr_blocks: ["0.0.0.0/0"]
-  }, {
-    from_port: 80
-    to_port: 80
-    protocol: "TCP"
-    cidr_blocks: ["0.0.0.0/0"]
-  }, {
-    from_port: 8080
-    to_port: 8080
-    protocol: "TCP"
-    cidr_blocks: ["0.0.0.0/0"]
-  }]
 }
 
 module "ecs" {
