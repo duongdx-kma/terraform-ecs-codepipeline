@@ -6,3 +6,7 @@ variable aws_region {
 variable tags {
   type = map(string)
 }
+
+variable env {
+  type = string
+}

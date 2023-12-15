@@ -11,7 +11,7 @@ resource "aws_ecs_cluster_capacity_providers" "example" {
 
 # ECS - Service
 resource "aws_ecs_service" "express-service" {
-  name             = "express-${var.env}"
+  name             = "express-${var.env}" # same ECR image name
   desired_count    = 1
   launch_type      = "FARGATE"
   platform_version = "1.4.0"
@@ -22,6 +22,10 @@ resource "aws_ecs_service" "express-service" {
     ignore_changes = [desired_count]
   }
 
+  deployment_controller {
+    type = "CODE_DEPLOY"
+  }
+
   network_configuration {
     subnets = var.private-subnet-ids
     security_groups = var.private-sg-ids
@@ -29,7 +33,7 @@ resource "aws_ecs_service" "express-service" {
   }
 
   load_balancer {
-#    target_group_arn = var.target-group-arn
+    target_group_arn = var.target-group-arn
     container_name   = "express-app"
     container_port   = 8088
   }
@@ -37,7 +41,7 @@ resource "aws_ecs_service" "express-service" {
 
 # ECS - task definition
 resource "aws_ecs_task_definition" "terraform-task-definition" {
-  family                   = "service"
+  family                   = "express-${var.env}" # same ECR image name
   network_mode             = "awsvpc"
   cpu                      = 256
   memory                   = 512
