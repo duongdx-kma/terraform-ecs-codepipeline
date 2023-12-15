@@ -2,14 +2,14 @@ locals {
   my_listeners = {
     "https" = {
       load_balancer_arn = aws_lb.main-alb.arn
-      port              = var.lb-listen-port
-      protocol          = var.lb-listen-protocol
+      port              = 443
+      protocol          = "HTTPS"
       certificate_arn   = var.certificate_arn
     } ,
     "http" = {
       load_balancer_arn = aws_lb.main-alb.arn
-      port              = var.lb-listen-port
-      protocol          = var.lb-listen-protocol
+      port              = 80
+      protocol          = "HTTP"
       certificate_arn   = null
     }
   }

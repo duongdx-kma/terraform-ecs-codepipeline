@@ -29,3 +29,7 @@ variable "blue_target_group_name" {
 variable "green_target_group_name" {
   type = string
 }
+
+variable "ecs_instance_log_group_name" {
+  type = string
+}

@@ -2,6 +2,7 @@ module "ecr" {
   source     = "../modules/ecr"
   aws_region = var.aws_region
   tags       = var.tags
+  env        = var.env
 }
 
 # VPC module
@@ -31,12 +32,20 @@ module "security-groups" {
   vpc_id     =  module.vpc.vpc_id
   aws_region = var.aws_region
 
-  alb-ingress = [{
-    from_port: var.lb-listen-port
-    to_port: var.lb-listen-port
-    protocol: "TCP"
-    cidr_blocks: ["0.0.0.0/0"]
-  }]
+  alb-ingress = [
+    {
+      from_port: var.lb-listen-port
+      to_port: var.lb-listen-port
+      protocol: "TCP"
+      cidr_blocks: ["0.0.0.0/0"]
+    },
+    {
+      from_port: 80
+      to_port: 80
+      protocol: "TCP"
+      cidr_blocks: ["0.0.0.0/0"]
+    }
+  ]
 
   instance-ingress = [{
     from_port: var.instance-port
@@ -86,11 +95,55 @@ module "ecs" {
   task-role-arn           = module.roles.ecs-task-role.arn
   private-sg-ids          = [module.security-groups.instance-sg-id]
   repository-url          = "${module.ecr.ecr-output}:${var.commit-id}"
-  target-group-arn        = module.alb.target-group-arn
+  target-group-arn        = module.alb.blue_target_group_arn # v1 - blue
   private-subnet-ids      = slice(module.vpc.private_subnets, 0, 2) // private-subnet-a, private-subnet-b
-  express-service-count   = var.express-service-count
   task-execution-role-arn = module.roles.ecs-task-execution-role.arn
 }
+
+module "auto-scaling" {
+  source      = "../modules/auto-scaling"
+  ecs_cluster_name = module.ecs.ecs_cluster.name
+  ecs_service_name = module.ecs.ecs_service.name
+}
+
+module "code_commit" {
+  source = "../modules/code-commit"
+}
+
+module "codebuild" {
+  source = "../modules/code-build"
+  tags = var.tags
+  aws_region = var.aws_region
+  env = var.env
+  ecr_repository_name = module.ecr.ecr_name
+}
+
+module "codedeploy" {
+  source                      = "../modules/code-deploy"
+  tags                        = var.tags
+  env                         = var.env
+  ecs_cluster_name            = module.ecs.ecs_cluster.name
+  ecs_service_name            = module.ecs.ecs_service.name
+  listener_arn                = module.alb.listener_arn
+  blue_target_group_name      = module.alb.blue_target_group_name
+  green_target_group_name     = module.alb.green_target_group_name
+  ecs_instance_log_group_name = module.ecs.ecs_instance_log_group_name
+}
+
+module "codepipeline" {
+  source                           = "../modules/code-pipeline"
+  tags                             = var.tags
+  env                              = var.env
+  codedeploy_app_name              = module.codedeploy.codedeploy_app_name
+  codedeploy_deployment_group_name = module.codedeploy.codedeploy_deployment_group_name
+  codebuild_project_name           = module.codebuild.codebuild_project_name
+  codebuild_project_arn            = module.codebuild.codebuild_project_arn
+  codecommit_repo_name             = module.code_commit.codecommit_repo_name
+  codecommit_repo_arn              = module.code_commit.codecommit_repo_arn
+  branch_name                      = "master"
+  application_name                 = "terraform-ecs-codepipeline"
+}
+
 
 module "route53" {
   source         = "../modules/route53"

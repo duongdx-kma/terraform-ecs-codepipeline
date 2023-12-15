@@ -12,7 +12,7 @@ resource "aws_codedeploy_deployment_group" "blue_green_deployment" {
 
   auto_rollback_configuration {
     enabled = true
-    events  = ["DEPLOYMENT_FAILURE"]
+    events  = ["DEPLOYMENT_FAILURE", "DEPLOYMENT_STOP_ON_ALARM", "DEPLOYMENT_STOP_ON_REQUEST"]
   }
 
   blue_green_deployment_config {
@@ -31,14 +31,14 @@ resource "aws_codedeploy_deployment_group" "blue_green_deployment" {
     deployment_type   = "BLUE_GREEN"
   }
 
+  alarm_configuration {
+    alarms  = [aws_cloudwatch_metric_alarm.error-exceeded.alarm_name]
+    enabled = true
+  }
+
   ecs_service {
     cluster_name = var.ecs_cluster_name
     service_name = var.ecs_service_name
-  }
-
-  alarm_configuration {
-    alarms  = ["my-alarm-name"]
-    enabled = true
   }
 
   load_balancer_info {
