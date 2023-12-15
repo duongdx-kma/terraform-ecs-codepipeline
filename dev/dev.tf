@@ -2,6 +2,7 @@ module "ecr" {
   source     = "../modules/ecr"
   aws_region = var.aws_region
   tags       = var.tags
+  env        = var.env
 }
 
 # VPC module
@@ -85,7 +86,7 @@ module "ecs" {
   task-role-arn           = module.roles.ecs-task-role.arn
   private-sg-ids          = [module.security-groups.instance-sg-id]
   repository-url          = "${module.ecr.ecr-output}:${var.commit-id}"
-  target-group-arn        = module.alb.blue_target_group_arn
+  target-group-arn        = module.alb.blue_target_group_arn # v1 - blue
   private-subnet-ids      = slice(module.vpc.private_subnets, 0, 2) // private-subnet-a, private-subnet-b
   express-service-count   = var.express-service-count
   task-execution-role-arn = module.roles.ecs-task-execution-role.arn
@@ -116,8 +117,8 @@ module "codedeploy" {
   ecs_cluster_name = module.ecs.ecs_cluster.name
   ecs_service_name = module.ecs.ecs_service.name
   listener_arn = module.alb.listener_arn
-  blue_target_group_arn = module.alb.blue_target_group_arn
-  green_target_group_arn = module.alb.green_target_group_arn
+  blue_target_group_name = module.alb.blue_target_group_name
+  green_target_group_name = module.alb.green_target_group_name
 }
 
 module "codepipeline" {
@@ -131,7 +132,7 @@ module "codepipeline" {
   codecommit_repo_name = module.code_commit.codecommit_repo_name
   codecommit_repo_arn = module.code_commit.codecommit_repo_arn
   branch_name = "master"
-  application_name = "terraform-ecs"
+  application_name = "terraform-ecs-codepipeline"
 }
 
 module "route53" {

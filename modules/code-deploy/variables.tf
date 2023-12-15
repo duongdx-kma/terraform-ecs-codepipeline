@@ -22,10 +22,10 @@ variable "listener_arn" {
   type = string
 }
 
-variable "blue_target_group_arn" {
+variable "blue_target_group_name" {
   type = string
 }
 
-variable "green_target_group_arn" {
+variable "green_target_group_name" {
   type = string
 }

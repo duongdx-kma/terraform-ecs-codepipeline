@@ -29,7 +29,7 @@ phases:
       - docker push $REPOSITORY_URI:latest
       - docker push $REPOSITORY_URI:$IMAGE_TAG
       - echo Writing image definitions file...
-      - ./create-new-task-def.sh $IMAGE_REPO_NAME
+      - /bin/sh ./create-new-task-defination.sh $IMAGE_REPO_NAME
 artifacts:
   files:
     - 'appspec.yaml'

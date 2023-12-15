@@ -35,6 +35,19 @@ data "aws_iam_policy_document" "iam_codepipeline_policy" {
 
     resources = ["*"]
   }
+
+  statement {
+    effect = "Allow"
+    actions = [
+      "ecs:ListTaskDefinitionFamilies",
+      "ecs:ListTaskDefinitions",
+      "ecs:TagResource",
+      "ecs:DescribeTaskDefinition",
+      "ecs:RegisterTaskDefinition",
+      "ecs:DeregisterTaskDefinition"
+    ]
+    resources = ["*"]
+  }
 }
 
 # trusted policy

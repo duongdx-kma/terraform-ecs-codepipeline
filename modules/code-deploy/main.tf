@@ -1,13 +1,14 @@
 resource "aws_codedeploy_app" "ecs-deploy" {
-  name = "ecs-deploy"
+  name             = "ecs-deploy"
+  compute_platform = "ECS"
 }
 
 resource "aws_codedeploy_deployment_group" "blue_green_deployment" {
   app_name = aws_codedeploy_app.ecs-deploy.name
-  deployment_group_name  = "blue_green_deployment with canary"
+  deployment_group_name  = "blue_green_deployment"
 #  deployment_config_name = "CodeDeployDefault.ECSCanary10Percent5Minutes"
   deployment_config_name = "CodeDeployDefault.ECSAllAtOnce"
-  service_role_arn       = aws_iam_role.codebuild_role.arn
+  service_role_arn       = aws_iam_role.codedeploy_role.arn
 
   auto_rollback_configuration {
     enabled = true
@@ -47,11 +48,11 @@ resource "aws_codedeploy_deployment_group" "blue_green_deployment" {
       }
 
       target_group {
-        name = var.blue_target_group_arn
+        name = var.blue_target_group_name
       }
 
       target_group {
-        name = var.green_target_group_arn
+        name = var.green_target_group_name
       }
     }
   }

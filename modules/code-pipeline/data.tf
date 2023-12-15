@@ -19,6 +19,25 @@ data "aws_iam_policy_document" "iam_codepipeline_policy" {
   }
 
   statement {
+    effect = "Allow"
+
+    actions = [
+      "iam:PassRole",
+    ]
+    resources = ["*"]
+    condition {
+      test     = "StringEqualsIfExists"
+      values   = [
+        "cloudformation.amazonaws.com",
+        "elasticbeanstalk.amazonaws.com",
+        "ec2.amazonaws.com",
+        "ecs-tasks.amazonaws.com"
+      ]
+      variable = "iam:PassedToService"
+    }
+  }
+
+  statement {
     sid = "codecommitaccess"
     actions = [
       "codecommit:GetBranch",
@@ -32,11 +51,56 @@ data "aws_iam_policy_document" "iam_codepipeline_policy" {
   }
 
   statement {
+    sid = "codedeployaccess"
+    actions = [
+      "codedeploy:CreateDeployment",
+      "codedeploy:GetApplication",
+      "codedeploy:GetApplicationRevision",
+      "codedeploy:GetDeployment",
+      "codedeploy:GetDeploymentConfig",
+      "codedeploy:RegisterApplicationRevision"
+    ]
+
+    resources = ["*"]
+  }
+
+  statement {
+    sid = "codestaraccess"
+    actions = [
+      "codestar-connections:UseConnection"
+    ]
+
+    resources = ["*"]
+  }
+
+  statement {
     effect = "Allow"
 
     actions = [
       "codebuild:BatchGetBuilds",
       "codebuild:StartBuild",
+      "codebuild:BatchGetBuildBatches",
+      "codebuild:StartBuildBatch"
+    ]
+
+    resources = ["*"]
+  }
+
+  statement {
+    effect = "Allow"
+
+    actions = [
+      "elasticbeanstalk:*",
+      "ec2:*",
+      "elasticloadbalancing:*",
+      "autoscaling:*",
+      "cloudwatch:*",
+      "s3:*",
+      "sns:*",
+      "cloudformation:*",
+      "rds:*",
+      "sqs:*",
+      "ecs:*"
     ]
 
     resources = ["*"]
