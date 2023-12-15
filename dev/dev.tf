@@ -88,7 +88,6 @@ module "ecs" {
   repository-url          = "${module.ecr.ecr-output}:${var.commit-id}"
   target-group-arn        = module.alb.blue_target_group_arn # v1 - blue
   private-subnet-ids      = slice(module.vpc.private_subnets, 0, 2) // private-subnet-a, private-subnet-b
-  express-service-count   = var.express-service-count
   task-execution-role-arn = module.roles.ecs-task-execution-role.arn
 }
 
@@ -111,28 +110,29 @@ module "codebuild" {
 }
 
 module "codedeploy" {
-  source = "../modules/code-deploy"
-  tags = var.tags
-  env = var.env
-  ecs_cluster_name = module.ecs.ecs_cluster.name
-  ecs_service_name = module.ecs.ecs_service.name
-  listener_arn = module.alb.listener_arn
-  blue_target_group_name = module.alb.blue_target_group_name
-  green_target_group_name = module.alb.green_target_group_name
+  source                      = "../modules/code-deploy"
+  tags                        = var.tags
+  env                         = var.env
+  ecs_cluster_name            = module.ecs.ecs_cluster.name
+  ecs_service_name            = module.ecs.ecs_service.name
+  listener_arn                = module.alb.listener_arn
+  blue_target_group_name      = module.alb.blue_target_group_name
+  green_target_group_name     = module.alb.green_target_group_name
+  ecs_instance_log_group_name = module.ecs.ecs_instance_log_group_name
 }
 
 module "codepipeline" {
-  source = "../modules/code-pipeline"
-  tags = var.tags
-  env = var.env
-  codedeploy_app_name = module.codedeploy.codedeploy_app_name
+  source                           = "../modules/code-pipeline"
+  tags                             = var.tags
+  env                              = var.env
+  codedeploy_app_name              = module.codedeploy.codedeploy_app_name
   codedeploy_deployment_group_name = module.codedeploy.codedeploy_deployment_group_name
-  codebuild_project_name = module.codebuild.codebuild_project_name
-  codebuild_project_arn = module.codebuild.codebuild_project_arn
-  codecommit_repo_name = module.code_commit.codecommit_repo_name
-  codecommit_repo_arn = module.code_commit.codecommit_repo_arn
-  branch_name = "master"
-  application_name = "terraform-ecs-codepipeline"
+  codebuild_project_name           = module.codebuild.codebuild_project_name
+  codebuild_project_arn            = module.codebuild.codebuild_project_arn
+  codecommit_repo_name             = module.code_commit.codecommit_repo_name
+  codecommit_repo_arn              = module.code_commit.codecommit_repo_arn
+  branch_name                      = "master"
+  application_name                 = "terraform-ecs-codepipeline"
 }
 
 module "route53" {

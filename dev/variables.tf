@@ -35,40 +35,6 @@ variable instance-port {
   default = 8088
 }
 
-variable express-service-count {
-  type = number
-  default = 0
-  description = "by default we won't provision service. We need provision and push image to ECR first"
-}
-
-variable auto-scaling-count {
-  type        = number
-  default     = 0
-  description = "by default we won't provision auto scaling. We need provision and push image to ECR first"
-}
-
-variable jenkins-version {
-  type = string
-  default = "2.414.3"
-  description = "jenkins-version"
-}
-
-variable instance-device-name {
-  default = "/dev/xvdh"
-}
-
-variable instance-type {
-  default = "t2.medium"
-}
-
-variable terraform-version {
-  default = "1.6.5"
-}
-
-variable path-to-public-key {
-  default = "my-key.pub"
-}
-
 variable ubuntu-ami {
   type = map(string)
   default = {
