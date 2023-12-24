@@ -28,6 +28,38 @@ data "aws_iam_policy_document" "ecs_service_elb" {
   }
 }
 
+// ecs task connect to rds
+data "aws_iam_policy_document" "rds" {
+  statement {
+    effect = "Allow"
+
+    actions = [
+      "rds-db:connect"
+    ]
+
+    resources = [
+      "*"
+    ]
+  }
+}
+
+// ecs task connect to secret-manager
+data "aws_iam_policy_document" "secret_manager" {
+  statement {
+    effect = "Allow"
+
+    actions = [
+      "ssm:GetParameters",
+      "secretsmanager:GetSecretValue",
+      "kms:Decrypt"
+    ]
+
+    resources = [
+      "*"
+    ]
+  }
+}
+
 data "aws_iam_policy_document" "ecs_service_standard" {
 
   statement {
@@ -136,6 +168,22 @@ resource "aws_iam_policy" "ecs_service_scaling" {
   policy = data.aws_iam_policy_document.ecs_service_scaling.json
 }
 
+resource "aws_iam_policy" "ecs_rds" {
+  name = "ecs_rds"
+  path = "/"
+  description = "Allow ecs service rds"
+
+  policy = data.aws_iam_policy_document.rds.json
+}
+
+resource "aws_iam_policy" "ecs_secret_manager" {
+  name = "ecs_secret_manager"
+  path = "/"
+  description = "Allow ecs service secret_manager"
+
+  policy = data.aws_iam_policy_document.secret_manager.json
+}
+
 # definition policies attachment
 resource "aws_iam_policy_attachment" "ecs-task-execution-attachment" {
   name       = "ecs-task-execution-attachment"
@@ -156,4 +204,14 @@ resource "aws_iam_role_policy_attachment" "ecs_service_standard" {
 resource "aws_iam_role_policy_attachment" "ecs_service_scaling" {
   role = var.task-role-name
   policy_arn = aws_iam_policy.ecs_service_scaling.arn
+}
+
+resource "aws_iam_role_policy_attachment" "ecs_rds" {
+  role = var.task-role-name
+  policy_arn = aws_iam_policy.ecs_rds.arn
+}
+
+resource "aws_iam_role_policy_attachment" "ecs_secret_manager" {
+  role = var.task-role-name
+  policy_arn = aws_iam_policy.ecs_secret_manager.arn
 }

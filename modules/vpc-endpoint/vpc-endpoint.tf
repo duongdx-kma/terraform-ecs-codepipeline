@@ -39,3 +39,14 @@ resource "aws_vpc_endpoint" "logs-interface-endpoint" {
 
   tags = merge({Name = "${var.env}-logs-endpoint"}, var.tags)
 }
+
+resource "aws_vpc_endpoint" "secret-manager-interface-endpoint" {
+  service_name        = "com.amazonaws.${var.aws_region}.secretsmanager"
+  vpc_endpoint_type   = "Interface"
+  security_group_ids  = var.vpc_endpoint_sg_ids
+  subnet_ids          = var.vpc_endpoint_subnet_ids
+  vpc_id              = var.vpc_id
+  private_dns_enabled = true
+
+  tags = merge({Name = "${var.env}-secretsmanager-endpoint"}, var.tags)
+}

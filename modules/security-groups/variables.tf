@@ -39,6 +39,16 @@ variable instance-ingress {
   description = "instance private ingress"
 }
 
+variable rds-ingress {
+  type = list(object({
+    from_port: number
+    to_port: number
+    protocol: string
+  }))
+
+  description = "instance private ingress"
+}
+
 variable endpoint-ingress {
   type = list(object({
     from_port: number

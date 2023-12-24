@@ -17,3 +17,8 @@ output "logs-interface-endpoint" {
   value = aws_vpc_endpoint.logs-interface-endpoint.id
   description = "logs interface endpoint id"
 }
+
+output "secretsmanager-interface-endpoint" {
+  value = aws_vpc_endpoint.secret-manager-interface-endpoint.id
+  description = "logs interface endpoint id"
+}

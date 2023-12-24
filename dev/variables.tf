@@ -45,3 +45,11 @@ variable ubuntu-ami {
 variable commit-id {
   default = ""
 }
+
+variable username {
+  default = "root"
+}
+
+variable db_name {
+  default = "db_business"
+}

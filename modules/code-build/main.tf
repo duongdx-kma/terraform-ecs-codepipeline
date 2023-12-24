@@ -33,6 +33,7 @@ resource "aws_codebuild_project" "terraform_ecs_codebuild" {
     image_pull_credentials_type = "CODEBUILD"
     privileged_mode             = true
 
+    // variable for building
     environment_variable {
       name  = "AWS_DEFAULT_REGION"
       value = var.aws_region
@@ -46,6 +47,53 @@ resource "aws_codebuild_project" "terraform_ecs_codebuild" {
     environment_variable {
       name  = "IMAGE_REPO_NAME"
       value = var.ecr_repository_name
+    }
+
+    // variable for task running
+    environment_variable {
+      name  = "DB_HOST"
+      value = var.rds_endpoint
+    }
+
+    environment_variable {
+      name  = "DB_USER"
+      value = var.username
+    }
+
+    // default null. password will get from Secret Manager
+    environment_variable {
+      name  = "DB_PASSWORD"
+      value = ""
+    }
+
+    environment_variable {
+      name  = "DB_NAME"
+      value = var.db_name
+    }
+
+    environment_variable {
+      name  = "DB_PORT"
+      value = var.db_port
+    }
+
+    environment_variable {
+      name  = "APP_PORT"
+      value = var.app_port
+    }
+
+    environment_variable {
+      name  = "APP_ENV"
+      value = var.app_env
+    }
+
+    environment_variable {
+      name  = "AWS_REGION"
+      value = var.aws_region
+    }
+
+    environment_variable {
+      name  = "SECRET_MANAGER_NAME"
+      value = var.secret_manager_name
     }
   }
 

@@ -18,3 +18,31 @@ variable env {
 variable ecr_repository_name {
   type = string
 }
+
+variable rds_endpoint {
+  type = string
+}
+
+variable username {
+  type = string
+}
+
+variable db_name {
+  type = string
+}
+
+variable db_port {
+  type = string
+}
+
+variable app_port {
+  type = string
+}
+
+variable app_env {
+  type = string
+}
+
+variable secret_manager_name {
+  type = string
+}

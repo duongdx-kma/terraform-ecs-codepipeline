@@ -9,60 +9,26 @@ resource "aws_vpc" "main" {
 
 #############################################################################
 # Subnets
-resource "aws_subnet" "main-public-a" {
+resource "aws_subnet" "main-public-subnet" {
+  count                   = length(var.public_subnet_cidrs)
   vpc_id                  = aws_vpc.main.id
-  cidr_block              = "10.1.1.0/24"
+  cidr_block              = element(var.public_subnet_cidrs, count.index)
   map_public_ip_on_launch = "true"
-  availability_zone       = "${var.aws_region}a"
+  availability_zone       = element(var.azs, count.index)
 
-  tags = merge({Name = "${var.env}-main-public-a"}, var.tags)
+  tags = merge({Name = "${var.env}-pubic-${element(var.azs, count.index)}"}, var.tags)
 }
 
-resource "aws_subnet" "main-public-b" {
+resource "aws_subnet" "main-private-subnet" {
+  count                   = length(var.private_subnet_cidrs)
   vpc_id                  = aws_vpc.main.id
-  cidr_block              = "10.1.2.0/24"
-  map_public_ip_on_launch = "true"
-  availability_zone       = "${var.aws_region}b"
-
-  tags = merge({Name = "${var.env}-main-public-b"}, var.tags)
-}
-
-resource "aws_subnet" "main-public-c" {
-  vpc_id                  = aws_vpc.main.id
-  cidr_block              = "10.1.3.0/24"
-  map_public_ip_on_launch = "true"
-  availability_zone       = "${var.aws_region}c"
-
-  tags = merge({Name = "${var.env}-main-public-c"}, var.tags)
-}
-
-resource "aws_subnet" "main-private-a" {
-  vpc_id                  = aws_vpc.main.id
-  cidr_block              = "10.1.4.0/24"
+  cidr_block              = element(var.private_subnet_cidrs, count.index)
   map_public_ip_on_launch = "false"
-  availability_zone       = "${var.aws_region}a"
+  availability_zone       = element(var.azs, count.index)
 
-  tags = merge({Name = "${var.env}-main-private-a"}, var.tags)
+  tags = merge({Name = "${var.env}-private-${element(var.azs, count.index)}"}, var.tags)
 }
 
-
-resource "aws_subnet" "main-private-b" {
-  vpc_id                  = aws_vpc.main.id
-  cidr_block              = "10.1.5.0/24"
-  map_public_ip_on_launch = "false"
-  availability_zone       = "${var.aws_region}b"
-
-  tags = merge({Name = "${var.env}-main-private-b"}, var.tags)
-}
-
-resource "aws_subnet" "main-private-c" {
-  vpc_id                  = aws_vpc.main.id
-  cidr_block              = "10.1.6.0/24"
-  map_public_ip_on_launch = "false"
-  availability_zone       = "${var.aws_region}c"
-
-  tags = merge({Name = "${var.env}-main-private-c"}, var.tags)
-}
 #############################################################################
 # internet gateway
 resource "aws_internet_gateway" "main-gateway" {
@@ -85,18 +51,9 @@ resource "aws_route_table" "main-public-route" {
 
 #############################################################################
 # route associations public subnet
-resource "aws_route_table_association" "main-public-1-a" {
-  subnet_id      = aws_subnet.main-public-a.id
-  route_table_id = aws_route_table.main-public-route.id
-}
-
-resource "aws_route_table_association" "main-public-1-b" {
-  subnet_id      = aws_subnet.main-public-b.id
-  route_table_id = aws_route_table.main-public-route.id
-}
-
-resource "aws_route_table_association" "main-public-1-c" {
-  subnet_id      = aws_subnet.main-public-c.id
+resource "aws_route_table_association" "main-public-associate" {
+  count = length(var.public_subnet_cidrs)
+  subnet_id      = element(aws_subnet.main-public-subnet[*].id, count.index)
   route_table_id = aws_route_table.main-public-route.id
 }
 
@@ -104,24 +61,13 @@ resource "aws_route_table_association" "main-public-1-c" {
 resource "aws_route_table" "main-private-route" {
   vpc_id = aws_vpc.main.id
 
-  tags = {
-    Name = "main-private-route"
-  }
+  tags = merge({Name = "${var.env}-main-private-route"}, var.tags)
 }
 
 #############################################################################
 # route associations private subnet
-resource "aws_route_table_association" "main-private-1-a" {
-  subnet_id      = aws_subnet.main-private-a.id
-  route_table_id = aws_route_table.main-private-route.id
-}
-
-resource "aws_route_table_association" "main-private-1-b" {
-  subnet_id      = aws_subnet.main-private-b.id
-  route_table_id = aws_route_table.main-private-route.id
-}
-
-resource "aws_route_table_association" "main-private-1-c" {
-  subnet_id      = aws_subnet.main-private-c.id
+resource "aws_route_table_association" "main-private-associate" {
+  count = length(var.private_subnet_cidrs)
+  subnet_id      = element(aws_subnet.main-private-subnet[*].id, count.index)
   route_table_id = aws_route_table.main-private-route.id
 }
