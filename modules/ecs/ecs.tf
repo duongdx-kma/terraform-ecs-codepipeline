@@ -39,6 +39,8 @@ resource "aws_ecs_service" "express-service" {
   }
 }
 
+// https://docs.aws.amazon.com/AmazonECS/latest/bestpracticesguide/networking-connecting-services.html
+// https://medium.com/@mr.mornesnyman/streamline-dns-record-management-for-ecs-services-with-terraform-aws-service-discovery-and-aws-a5fa32b3b8a4
 # ECS - task definition
 resource "aws_ecs_task_definition" "terraform-task-definition" {
   family                   = "express-${var.env}" # same ECR image name
