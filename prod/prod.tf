@@ -11,6 +11,9 @@ module "vpc" {
   env        = var.env
   aws_region = var.aws_region
   tags       = var.tags
+  azs                  = ["ap-southeast-1a", "ap-southeast-1b", "ap-southeast-1c"]
+  public_subnet_cidrs  = ["10.1.1.0/24", "10.1.2.0/24", "10.1.3.0/24"]
+  private_subnet_cidrs = ["10.1.4.0/24", "10.1.5.0/24", "10.1.6.0/24"]
 }
 
 module "vpc-endpoint" {
@@ -53,6 +56,12 @@ module "security-groups" {
     protocol: "TCP"
   }]
 
+  rds-ingress = [{
+    from_port: "3306"
+    to_port: "3306"
+    protocol: "TCP"
+  }]
+
   endpoint-ingress = [{
     from_port: "443"
     to_port: "443"
@@ -65,6 +74,15 @@ module "roles" {
   env        = var.env
   tags       = var.tags
   aws_region = var.aws_region
+}
+
+module "rds" {
+  source                 = "../modules/rds"
+  username               = var.username
+  db_name                = var.db_name
+  subnet_ids             = module.vpc.public_subnets
+  rds_security_group_ids = [module.security-groups.rds-sg-id]
+  rds_credentials_key    = "rds_credentials_prod"
 }
 
 module "alb" {
@@ -116,6 +134,13 @@ module "codebuild" {
   aws_region = var.aws_region
   env = var.env
   ecr_repository_name = module.ecr.ecr_name
+  rds_endpoint        = module.rds.mysql-rds-address
+  username            = var.username
+  db_name             = var.db_name
+  db_port             = "3306"
+  app_port            = var.instance-port
+  app_env             = "production"
+  secret_manager_name = module.rds.secret_manager_name
 }
 
 module "codedeploy" {

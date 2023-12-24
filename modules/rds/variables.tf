@@ -13,3 +13,7 @@ variable subnet_ids {
 variable rds_security_group_ids {
   type = list(string)
 }
+
+variable rds_credentials_key {
+  type = string
+}

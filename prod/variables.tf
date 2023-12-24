@@ -54,3 +54,11 @@ variable "hosted_zone_id" {
   type    = string
   default = "Z10021163CFESZLAG77PX"
 }
+
+variable username {
+  default = "root"
+}
+
+variable db_name {
+  default = "db_business"
+}

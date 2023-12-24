@@ -74,6 +74,7 @@ module "rds" {
   db_name                = var.db_name
   subnet_ids             = module.vpc.public_subnets
   rds_security_group_ids = [module.security-groups.rds-sg-id]
+  rds_credentials_key    = "rds_credentials_dev"
 }
 
 module "alb" {
