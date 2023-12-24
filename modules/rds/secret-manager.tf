@@ -5,7 +5,7 @@ resource "random_password" "master_password"{
 }
 
 resource "aws_secretsmanager_secret" "rds_credentials" {
-  name = "mysql-rds/credentials"
+  name = var.rds_credentials_key
 }
 
 resource "aws_secretsmanager_secret_version" "rds_credentials" {
