@@ -7,10 +7,10 @@ module "ecr" {
 
 # VPC module
 module "vpc" {
-  source     = "../modules/vpc"
-  env        = var.env
-  aws_region = var.aws_region
-  tags       = var.tags
+  source               = "../modules/vpc"
+  env                  = var.env
+  aws_region           = var.aws_region
+  tags                 = var.tags
   azs                  = ["ap-southeast-1a", "ap-southeast-1b", "ap-southeast-1c"]
   public_subnet_cidrs  = ["10.1.1.0/24", "10.1.2.0/24", "10.1.3.0/24"]
   private_subnet_cidrs = ["10.1.4.0/24", "10.1.5.0/24", "10.1.6.0/24"]
@@ -32,41 +32,47 @@ module "security-groups" {
   source     = "../modules/security-groups"
   env        = var.env
   tags       = var.tags
-  vpc_id     =  module.vpc.vpc_id
+  vpc_id     = module.vpc.vpc_id
   aws_region = var.aws_region
 
   alb-ingress = [
     {
-      from_port: var.lb-listen-port
-      to_port: var.lb-listen-port
-      protocol: "TCP"
-      cidr_blocks: ["0.0.0.0/0"]
+      from_port : var.lb-listen-port
+      to_port : var.lb-listen-port
+      protocol : "TCP"
+      cidr_blocks : ["0.0.0.0/0"]
     },
     {
-      from_port: 80
-      to_port: 80
-      protocol: "TCP"
-      cidr_blocks: ["0.0.0.0/0"]
+      from_port : 80
+      to_port : 80
+      protocol : "TCP"
+      cidr_blocks : ["0.0.0.0/0"]
     }
   ]
 
-  instance-ingress = [{
-    from_port: var.instance-port
-    to_port: var.instance-port
-    protocol: "TCP"
-  }]
+  instance-ingress = [
+    {
+      from_port : var.instance-port
+      to_port : var.instance-port
+      protocol : "TCP"
+    }
+  ]
 
-  rds-ingress = [{
-    from_port: "3306"
-    to_port: "3306"
-    protocol: "TCP"
-  }]
+  rds-ingress = [
+    {
+      from_port : "3306"
+      to_port : "3306"
+      protocol : "TCP"
+    }
+  ]
 
-  endpoint-ingress = [{
-    from_port: "443"
-    to_port: "443"
-    protocol: "TCP"
-  }]
+  endpoint-ingress = [
+    {
+      from_port : "443"
+      to_port : "443"
+      protocol : "TCP"
+    }
+  ]
 }
 
 module "roles" {
@@ -95,14 +101,14 @@ module "alb" {
   lb-listen-protocol    = var.lb-listen-protocol
   health-check-count    = 3
   alb-public-subnet-ids = slice(module.vpc.public_subnets, 0, 2) // public-subnet-a, public-subnet-b
-  certificate_arn       = aws_acm_certificate.certificate.arn
+  certificate_arn       = module.api_acm.api_acm_arn
 }
 
 module "policies" {
-  source                     = "../modules/iam-policies"
-  alb-arn                    = module.alb.lb-arn
-  task-role-name             = module.roles.ecs-task-role.name
-  task-execution-role-name   = module.roles.ecs-task-execution-role.name
+  source                   = "../modules/iam-policies"
+  alb-arn                  = module.alb.lb-arn
+  task-role-name           = module.roles.ecs-task-role.name
+  task-execution-role-name = module.roles.ecs-task-execution-role.name
 }
 
 module "ecs" {
@@ -112,34 +118,31 @@ module "ecs" {
   aws_region              = var.aws_region
   task-role-arn           = module.roles.ecs-task-role.arn
   private-sg-ids          = [module.security-groups.instance-sg-id]
-  repository-url          = "${module.ecr.ecr-output}:${var.commit-id}"
+  ecr-repository-url      = module.ecr.ecr-output
   target-group-arn        = module.alb.blue_target_group_arn # v1 - blue
   private-subnet-ids      = slice(module.vpc.private_subnets, 0, 2) // private-subnet-a, private-subnet-b
   task-execution-role-arn = module.roles.ecs-task-execution-role.arn
 }
 
 module "auto-scaling" {
-  source      = "../modules/auto-scaling"
+  source           = "../modules/auto-scaling"
   ecs_cluster_name = module.ecs.ecs_cluster.name
   ecs_service_name = module.ecs.ecs_service.name
 }
 
-module "code_commit" {
-  source = "../modules/code-commit"
-}
-
 module "codebuild" {
-  source = "../modules/code-build"
-  tags = var.tags
-  aws_region = var.aws_region
-  env = var.env
+  source              = "../modules/code-build"
+  tags                = var.tags
+  aws_region          = var.aws_region
+  env                 = var.env
   ecr_repository_name = module.ecr.ecr_name
   rds_endpoint        = module.rds.mysql-rds-address
   username            = var.username
   db_name             = var.db_name
   db_port             = "3306"
   app_port            = var.instance-port
-  app_env             = "production"
+  app_env             = "prod"
+  db_driver           = module.rds.mysql_engine_name
   secret_manager_name = module.rds.secret_manager_name
 }
 
@@ -163,39 +166,22 @@ module "codepipeline" {
   codedeploy_deployment_group_name = module.codedeploy.codedeploy_deployment_group_name
   codebuild_project_name           = module.codebuild.codebuild_project_name
   codebuild_project_arn            = module.codebuild.codebuild_project_arn
-  codecommit_repo_name             = module.code_commit.codecommit_repo_name
-  codecommit_repo_arn              = module.code_commit.codecommit_repo_arn
-  branch_name                      = "master"
+  github_username                  = var.github_username
+  github_repo                      = var.github_repo
+  branch_name                      = var.branch_name
   application_name                 = "terraform-ecs-codepipeline"
 }
 
-
 module "route53" {
-  source         = "../modules/route53"
-  elb-dns-name   = module.alb.lb-dns
-  elb-zone-id    = module.alb.lb-zone-id
-  hosted_zone_id = var.hosted_zone_id
+  source          = "../modules/route53"
+  elb_dns_name    = module.alb.lb-dns
+  elb_zone_id     = module.alb.lb-zone-id
+  hosted_zone_id  = var.hosted_zone_id
+  api_domain_name = var.api_domain_name
 }
 
-# Create an ACM Certificate
-resource "aws_acm_certificate" "certificate" {
-  domain_name       = var.root_domain_name
-  validation_method = "DNS"
-  lifecycle {
-    create_before_destroy = true
-  }
-}
-
-resource "aws_route53_record" "cert_dns" {
-  allow_overwrite = true
-  name            =  tolist(aws_acm_certificate.certificate.domain_validation_options)[0].resource_record_name
-  records         = [tolist(aws_acm_certificate.certificate.domain_validation_options)[0].resource_record_value]
-  type            = tolist(aws_acm_certificate.certificate.domain_validation_options)[0].resource_record_type
-  zone_id         = var.hosted_zone_id
-  ttl = 60
-}
-
-resource "aws_acm_certificate_validation" "hello_cert_validate" {
-  certificate_arn         = aws_acm_certificate.certificate.arn
-  validation_record_fqdns = [aws_route53_record.cert_dns.fqdn]
+module api_acm {
+  source          = "../modules/api-acm"
+  hosted_zone_id  = var.hosted_zone_id
+  api_domain_name = var.api_domain_name
 }

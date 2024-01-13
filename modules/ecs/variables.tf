@@ -18,7 +18,7 @@ variable task-role-arn {
   description = "ecs-task-role-arn"
 }
 
-variable repository-url {
+variable ecr-repository-url {
   type = string
   description = "the repository url of ECR"
 }

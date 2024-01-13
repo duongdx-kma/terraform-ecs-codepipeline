@@ -27,11 +27,11 @@ variable codebuild_project_arn {
   type = string
 }
 
-variable codecommit_repo_name {
+variable github_username {
   type = string
 }
 
-variable codecommit_repo_arn {
+variable github_repo {
   type = string
 }
 

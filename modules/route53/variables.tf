@@ -1,3 +1,4 @@
-variable "elb-dns-name" {}
-variable "elb-zone-id" {}
-variable "hosted_zone_id" {}
+variable elb_dns_name {}
+variable elb_zone_id {}
+variable hosted_zone_id {}
+variable api_domain_name {}

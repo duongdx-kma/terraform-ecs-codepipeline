@@ -5,12 +5,12 @@ data "aws_route53_zone" "selected" {
 
 resource "aws_route53_record" "duongdx" {
   zone_id = data.aws_route53_zone.selected.zone_id
-  name    = data.aws_route53_zone.selected.name
+  name    = var.api_domain_name
   type    = "A"
 
   alias {
-    name                   = var.elb-dns-name
-    zone_id                = var.elb-zone-id
+    name                   = var.elb_dns_name
+    zone_id                = var.elb_zone_id
     evaluate_target_health = true
   }
 }

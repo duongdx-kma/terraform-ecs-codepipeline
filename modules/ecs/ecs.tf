@@ -10,8 +10,8 @@ resource "aws_ecs_cluster_capacity_providers" "example" {
 }
 
 # ECS - Service
-resource "aws_ecs_service" "express-service" {
-  name             = "express-${var.env}" # same ECR image name
+resource "aws_ecs_service" "backend-service" {
+  name             = "backend-${var.env}" # same ECR image name
   desired_count    = 1
   launch_type      = "FARGATE"
   platform_version = "1.4.0"
@@ -34,7 +34,7 @@ resource "aws_ecs_service" "express-service" {
 
   load_balancer {
     target_group_arn = var.target-group-arn
-    container_name   = "express-app"
+    container_name   = "backend-app"
     container_port   = 8088
   }
 }
@@ -43,7 +43,7 @@ resource "aws_ecs_service" "express-service" {
 // https://medium.com/@mr.mornesnyman/streamline-dns-record-management-for-ecs-services-with-terraform-aws-service-discovery-and-aws-a5fa32b3b8a4
 # ECS - task definition
 resource "aws_ecs_task_definition" "terraform-task-definition" {
-  family                   = "express-${var.env}" # same ECR image name
+  family                   = "backend-${var.env}" # same ECR image name
   network_mode             = "awsvpc"
   cpu                      = 256
   memory                   = 512
@@ -52,8 +52,8 @@ resource "aws_ecs_task_definition" "terraform-task-definition" {
   requires_compatibilities = ["FARGATE"]
   container_definitions = jsonencode([
     {
-      name      = "express-app"
-      image     = var.repository-url
+      name      = "backend-app"
+      image     = var.ecr-repository-url
       essential = true
       portMappings = [
         {
@@ -64,7 +64,7 @@ resource "aws_ecs_task_definition" "terraform-task-definition" {
       logConfiguration: {
         "logDriver": "awslogs",
         "options": {
-          "awslogs-group": "/fargate/service/express-${var.env}",
+          "awslogs-group": "/fargate/service/backend-${var.env}",
           "awslogs-region": var.aws_region,
           "awslogs-stream-prefix": "ecs"
         }
@@ -76,7 +76,7 @@ resource "aws_ecs_task_definition" "terraform-task-definition" {
 }
 
 resource "aws_cloudwatch_log_group" "logs" {
-  name              = "/fargate/service/express-${var.env}"
+  name              = "/fargate/service/backend-${var.env}"
   retention_in_days = var.logs-retention-in-days
   tags              = var.tags
 }

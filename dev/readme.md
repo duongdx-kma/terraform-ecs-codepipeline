@@ -3,7 +3,7 @@
 3. setup jenkins : build image and push image to ECR
 > COMMIT_HASH=$(echo ${GIT_COMMIT} | cut -c 1-7)
 > IMAGE_TAG=${COMMIT_HASH:=latest}
-> REPOSITORY_URI="240993297305.dkr.ecr.ap-southeast-1.amazonaws.com/express-ecr"
+> REPOSITORY_URI="240993297305.dkr.ecr.ap-southeast-1.amazonaws.com/backend-ecr"
 > docker build -t $REPOSITORY_URI:latest code
 > docker tag $REPOSITORY_URI:latest $REPOSITORY_URI:$IMAGE_TAG
 > aws ecr get-login-password --region ap-southeast-1 | docker login --username AWS --password-stdin 240993297305.dkr.ecr.ap-southeast-1.amazonaws.com
@@ -20,4 +20,4 @@
 > IMAGE_TAG=${COMMIT_HASH:=latest}
 > sh scripts/append.sh
 > terraform init
-> terraform apply -auto-approve -var express-service-count=1 -var commit-id=${IMAGE_TAG}
+> terraform apply -auto-approve -var backend-service-count=1 -var commit-id=${IMAGE_TAG}

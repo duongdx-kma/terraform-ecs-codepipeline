@@ -37,18 +37,25 @@ data "aws_iam_policy_document" "iam_codepipeline_policy" {
     }
   }
 
+  # policy for codestart
   statement {
-    sid = "codecommitaccess"
-    actions = [
-      "codecommit:GetBranch",
-      "codecommit:GetCommit",
-      "codecommit:UploadArchive",
-      "codecommit:GetUploadArchiveStatus",
-      "codecommit:CancelUploadArchive"
-    ]
-
-    resources = [var.codecommit_repo_arn]
+    effect    = "Allow"
+    actions   = ["codestar-connections:UseConnection"]
+    resources = [aws_codestarconnections_connection.codestar_github.arn]
   }
+
+#  statement {
+#    sid = "codecommitaccess"
+#    actions = [
+#      "codecommit:GetBranch",
+#      "codecommit:GetCommit",
+#      "codecommit:UploadArchive",
+#      "codecommit:GetUploadArchiveStatus",
+#      "codecommit:CancelUploadArchive"
+#    ]
+#
+#    resources = [var.codecommit_repo_arn]
+#  }
 
   statement {
     sid = "codedeployaccess"

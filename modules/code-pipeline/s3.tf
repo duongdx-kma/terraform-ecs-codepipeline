@@ -1,11 +1,16 @@
+resource "random_string" "random" {
+  length = 16
+  upper = false
+  special = false
+}
+
 resource "aws_s3_bucket" "codepipeline_bucket" {
-  bucket = var.application_name
+  bucket = "${var.application_name}-${random_string.random.result}"
   force_destroy = true
 }
 
 resource "aws_s3_bucket_policy" "this" {
   bucket = aws_s3_bucket.codepipeline_bucket.id
-
   policy = data.aws_iam_policy_document.s3.json
 }
 

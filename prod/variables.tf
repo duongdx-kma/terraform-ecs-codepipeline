@@ -35,22 +35,34 @@ variable instance-port {
   default = 8088
 }
 
-variable express-service-count {
-  type = number
-  default = 0
-  description = "by default we won't provision service. We need provision and push image to ECR first"
+variable github_username {
+  type = string
+  default = "duongdx-kma"
+  description = "github username"
+}
+
+variable github_repo {
+  type = string
+  default = "golang-project"
+  description = "github repository name"
+}
+
+variable branch_name {
+  type = string
+  default = "duongdx-golang"
+  description = "github branch name"
 }
 
 variable commit-id {
   default = ""
 }
 
-variable "root_domain_name" {
+variable api_domain_name {
   type    = string
-  default = "duongdx.com"
+  default = "api.duongdx.com"
 }
 
-variable "hosted_zone_id" {
+variable hosted_zone_id {
   type    = string
   default = "Z10021163CFESZLAG77PX"
 }

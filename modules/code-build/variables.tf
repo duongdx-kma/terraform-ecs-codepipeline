@@ -19,6 +19,11 @@ variable ecr_repository_name {
   type = string
 }
 
+variable db_driver {
+  type = string
+  // mysql, mariadb, postgres ....
+}
+
 variable rds_endpoint {
   type = string
 }
