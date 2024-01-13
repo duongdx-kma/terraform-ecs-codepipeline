@@ -59,7 +59,7 @@ variable commit-id {
 
 variable api_domain_name {
   type    = string
-  default = "api.duongdx.com"
+  default = "duongdx.com"
 }
 
 variable hosted_zone_id {
