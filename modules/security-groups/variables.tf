@@ -29,6 +29,17 @@ variable alb-ingress {
   description = "application load balancer ingress"
 }
 
+variable batch-ingress {
+  type = list(object({
+    from_port: number
+    to_port: number
+    protocol: string
+    cidr_blocks: list(string)
+  }))
+
+  description = "application load balancer ingress"
+}
+
 variable instance-ingress {
   type = list(object({
     from_port: number

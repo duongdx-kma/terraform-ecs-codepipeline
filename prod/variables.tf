@@ -67,6 +67,42 @@ variable hosted_zone_id {
   default = "Z10021163CFESZLAG77PX"
 }
 
+variable frontend_domain_name {
+  type    = string
+  default = "duongdx.com"
+}
+
+variable frontend_hosted_zone_id {
+  type    = string
+  default = "Z10021163CFESZLAG77PX"
+}
+
+variable frontend_bucket_name {
+  type    = string
+  default = "duongdx-frontend"
+}
+
+variable path_to_public_key {
+  type = string
+  default = "mykey.pub"
+}
+
+variable batch_instance_ami {
+  type = string
+  default = "ami-0fa377108253bf620"
+}
+
+variable batch_instance_type {
+  type = string
+  default = "t2.small"
+}
+
+variable instance_user_name {
+  type        = string
+  default     = "ubuntu"
+  description = "consider with Bastion instance AMI"
+}
+
 variable username {
   default = "root"
 }

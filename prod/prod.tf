@@ -50,6 +50,27 @@ module "security-groups" {
     }
   ]
 
+  batch-ingress = [
+    {
+      from_port : 22 // jenkins
+      to_port : 22 // jenkins
+      protocol : "TCP"
+      cidr_blocks : ["0.0.0.0/0"]
+    },
+    {
+      from_port : 8080 // jenkins
+      to_port : 8080 // jenkins
+      protocol : "TCP"
+      cidr_blocks : ["0.0.0.0/0"]
+    },
+    {
+      from_port : 80
+      to_port : 80
+      protocol : "TCP"
+      cidr_blocks : ["0.0.0.0/0"]
+    }
+  ]
+
   instance-ingress = [
     {
       from_port : var.instance-port
@@ -184,4 +205,51 @@ module api_acm {
   source          = "../modules/api-acm"
   hosted_zone_id  = var.hosted_zone_id
   api_domain_name = var.api_domain_name
+}
+
+module batch_instance {
+  source              = "../modules/jenkins"
+  path_to_public_key  = var.path_to_public_key
+  batch_instance_ami  = var.batch_instance_ami
+  batch_instance_type = var.batch_instance_type
+  batch_subnet_id     = element(module.vpc.public_subnets, 0)
+  instance_user_name  = var.instance_user_name
+  env                 = var.env
+  tags                = var.tags
+  batch_sg_ids        = [module.security-groups.batch-sg-id]
+  use_data_file       = "user-data.sh"
+  hosted_zone_id      = var.hosted_zone_id
+  batch_domain_name   = "batch.duongdx.com"
+}
+
+# cloudfront ACM
+module cloudfront_acm {
+  source    = "../modules/cloudfront-acm"
+  providers = {
+    aws = aws.us-east-1
+  }
+  route53_cert_dns = module.frontend.route53_cert_dns
+  params           = {
+    admin = {
+      bucket_name    = var.frontend_bucket_name
+      domain_name    = var.frontend_domain_name
+      hosted_zone_id = var.frontend_hosted_zone_id
+    }
+  }
+}
+
+// frontend
+module frontend {
+  source = "../modules/frontend"
+  tags   = var.tags
+  env    = var.env
+  acm    = module.cloudfront_acm.acm_output
+
+  params = {
+    admin = {
+      bucket_name    = var.frontend_bucket_name
+      domain_name    = var.frontend_domain_name
+      hosted_zone_id = var.frontend_hosted_zone_id
+    }
+  }
 }

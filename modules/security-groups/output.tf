@@ -2,6 +2,10 @@ output "alb-sg-id" {
   value = aws_security_group.alb-sg.id
 }
 
+output "batch-sg-id" {
+  value = aws_security_group.batch-sg.id
+}
+
 output "instance-sg-id" {
   value = aws_security_group.instance-sg.id
 }
